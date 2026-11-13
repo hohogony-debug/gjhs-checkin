@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>5차 입학설명회 입장 확인</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --fg:#17202c; --muted:#5b6778; --line:#d5dce6;
+  --accent:#2f5a8f; --ok:#1f7a4a; --ok-soft:#e3f3ea; --no:#a3501a; --no-soft:#fbeee2;
+  --body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#10151c; --card:#19212b; --fg:#e7ebf1; --muted:#9ba7b7; --line:#2d3743;
+  --accent:#8fb2dc; --ok:#6fd39c; --ok-soft:#15281d; --no:#f0a774; --no-soft:#2c2016; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;word-break:keep-all;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:calc(28px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+[hidden]{display:none!important}
+.wrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.head{display:flex;flex-direction:column;gap:4px}
+.school{font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.02em}
+h1{font-size:26px;font-weight:900;margin:0;line-height:1.3}
+.sub{color:var(--muted);font-size:15px;margin:0}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+label{font-weight:700;font-size:15px}
+input{font:500 22px var(--body);padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);width:100%}
+input:focus{outline:none;border-color:var(--accent)}
+button{font:700 18px var(--body);padding:14px;border:0;border-radius:10px;background:var(--accent);color:var(--card);cursor:pointer}
+button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.who{font-size:22px;font-weight:700;text-align:center}
+.reg{text-align:center;color:var(--muted);font-size:16px}
+.step{display:flex;align-items:center;justify-content:center;gap:18px}
+.step button{width:64px;height:64px;padding:0;font-size:32px;border-radius:50%;background:var(--bg);color:var(--fg);border:2px solid var(--line)}
+.step output{font-size:60px;font-weight:900;min-width:2ch;text-align:center;font-variant-numeric:tabular-nums;line-height:1}
+.unit{font-size:20px;font-weight:700;margin-left:-10px}
+.pick{display:flex;flex-direction:column;gap:8px}
+.pick button{background:var(--bg);color:var(--fg);border:2px solid var(--line);display:flex;justify-content:space-between}
+.res{border-radius:16px;padding:22px 20px;display:flex;flex-direction:column;gap:8px;text-align:center}
+.res.ok{background:var(--ok-soft);border:3px solid var(--ok)}
+.res.no{background:var(--no-soft);border:3px solid var(--no)}
+.badge{font-size:30px;font-weight:900}
+.ok .badge{color:var(--ok)} .no .badge{color:var(--no)}
+.cnt{font-size:56px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+.cnt small{font-size:20px;font-weight:700}
+.clock,.rec{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.msg{font-size:16px;margin:0}
+.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent);font-size:16px;padding:10px}
+.foot{font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="school">광양제철고등학교</span>
+    <h1>2027학년도 5차 입학설명회<br>입장 확인</h1>
+    <p class="sub">신청하신 학생 이름을 입력하고, 확인 화면을 입구 선생님께 보여 주세요.</p>
+  </div>
+
+  <!-- 1단계: 이름 -->
+  <form id="f" class="box" autocomplete="off">
+    <label for="nm">학생 이름</label>
+    <input id="nm" type="text" placeholder="예: 홍길동" maxlength="20" required>
+    <button type="submit">신청 확인</button>
+    <p class="hint">네이버폼 신청 때 적은 학생 이름 그대로 입력하세요.</p>
+  </form>
+
+  <!-- 동명이인: 지역 선택 -->
+  <div id="s-pick" class="box" hidden>
+    <div class="who" id="pk-who"></div>
+    <p class="msg">같은 이름의 신청자가 여러 명입니다. 지역과 출신 중학교를 확인해 골라 주세요.</p>
+    <div class="pick" id="pk"></div>
+    <button type="button" class="ghost" data-back>처음으로</button>
+  </div>
+
+  <!-- 2단계: 참석 인원 -->
+  <div id="s-cnt" class="box" hidden>
+    <div class="who" id="c-who"></div>
+    <div class="reg" id="c-reg"></div>
+    <label style="text-align:center">오늘 함께 오신 인원 (학생 포함)</label>
+    <div class="step">
+      <button type="button" id="dn" aria-label="한 명 줄이기">−</button>
+      <output id="cv">1</output><span class="unit">명</span>
+      <button type="button" id="up" aria-label="한 명 늘리기">+</button>
+    </div>
+    <button type="button" id="go">입장 확인</button>
+    <button type="button" class="ghost" data-back>처음으로</button>
+  </div>
+
+  <!-- 3단계: 결과 -->
+  <div id="out" hidden></div>
+  <p class="foot">이 화면에는 신청 여부와 인원만 표시됩니다.</p>
+</div>
+
+<script>
+var API = "https://script.google.com/macros/s/AKfycbwd-bAc54yTfO9f4ndDZk2a8wcf5TaCkw2brf3_dK-e3RuRIbtynAFM_MV_1ZIQALs8/exec";
+var SALT = "gjhs5-7f3a91c2e04b";
+var D = {"72a101744ede8dec7f4e1ea367d06171b0a283388e5a3e7aba4a20b4fe0e2ff1":[[3,"진주","72a101744ede-0"]],"cc757d2e27548893987e2911693454fd24314b0e1e6b82f3ca9516a08a881967":[[2,"부산","cc757d2e2754-0"]],"63dc2dad1366478c9fcfc01f526520da11bd6c2e152a1d493ba4e967d41c8bca":[[2,"여수","63dc2dad1366-0"]],"516aa4bbf98fffd30e93e0c8d89f21b6577622d12e6e420c2a0bb2beb4aca254":[[4,"여수","516aa4bbf98f-0"]],"62d42096bc4da8ecff6e913b0763b6890a3f60e67ce7494fbc1234c5149ac83f":[[2,"진주","62d42096bc4d-0"]],"22915d5eaaa095ca6e31d4321abe736b86b0fba137170945249326b81d6c08da":[[2,"순천","22915d5eaaa0-0"]],"05ae1199b86a8938ebcd84f594d7370896ce1e9c3b98ed938ae950fa2c90c53f":[[3,"여수","05ae1199b86a-0"]],"c834a570d6e593e68559b45a32f590ceaa872c1ff2798bf50c90051c116b5c79":[[2,"창원","c834a570d6e5-0"]],"34a83bc22bb320780dafa76df57055bc12073da78ff5a3b0904f7c73b08f7845":[[3,"여수","34a83bc22bb3-0"]],"d7f1c25047eb23d432f31beb52f168eb5069d9e9b9903b89cac1a0ef64f7449a":[[2,"여수","d7f1c25047eb-0"]],"275ccd961f40debe2d701e2b4ef5b188aaca8f68d0e30fbb2be1137672c713a3":[[3,"순천","275ccd961f40-0"]],"9e6c9987f2539e77bb14145458d38c320c38a24ef396dcb6ffeca87cf0cc02ea":[[3,"창원","9e6c9987f253-0"]],"1b8ac41751cd71e4807ec01f855f5c1930972649c2773f2ea0880809cf1b167f":[[3,"울산","1b8ac41751cd-0"]],"cb2dc6299f652a13516545441f36e6ea1989135bacab399defd555a8b5819e15":[[2,"광주","cb2dc6299f65-0"]],"bffe247ca4c4310b6e81cdacbd5d98cb19df8c615bb9235022e5d8f4eb907304":[[4,"여수","bffe247ca4c4-0"]],"c9de21796df3174a9ad65234c6c13ab65c1bfd6dd0798f6f3dd515e06b2512ca":[[4,"부산","c9de21796df3-0"]],"bc5a0456d2e57c0593340ce1b70f5ca24541cb7bdf6ca4b1d7467104df7d2487":[[2,"진주","bc5a0456d2e5-0"]],"2ce8a35c89af7d4cd8f98a35f126d5707c66ccdb84be1be008c3ce91a50ec9aa":[[3,"광주","2ce8a35c89af-0"]],"3eee1b97f0d6a15493609b587c6ae74ae6d7c795b5c78452ea6bf7727d304c57":[[4,"창원","3eee1b97f0d6-0"]],"ac5de8a65760ca756f2b4b602a2f9c43f293e49ade8e6d2af1796feb26c45a02":[[2,"사천","ac5de8a65760-0"]],"5419a235dc26312c09e3682d3cd57467cb89d09e05ff249d61016a9d9259972d":[[4,"창원","5419a235dc26-0"]],"5411b3a5e28d53b3c93129e807c478628937f54cc8d3d8e37092202561966b90":[[1,"광양","5411b3a5e28d-0"]],"7659e4b7cfb14309a095da644e0778aaac7c32eae6d0d18ade909bd8b1a8c683":[[4,"서울","7659e4b7cfb1-0"]],"97bd430be2a2d2e7cf56ad99d983a2d6c6b03b1bdf4948648c2d353322616109":[[2,"광주","97bd430be2a2-0"]],"8e312f012ac9182bfb344d7c82d39190a3c7d4bd9b630c7a6c646d337d659174":[[2,"광양","8e312f012ac9-0"]],"e0df3c2539e561c15a8feff8945b8517cd26741229018ef0c5a8601a8856e7db":[[3,"창원","e0df3c2539e5-0"]],"64c54d0f92f6f1772277194ff53a5d0e5b5d4ff4af7f4be499bdbac46b0d8258":[[3,"대전","64c54d0f92f6-0"]],"4c5a931b2424a639450898823e9554615034bcabeaee1694b125eddd88c8273a":[[3,"부산","4c5a931b2424-0"]],"95449470014f63781ad32cafd4138bd6d6e70dd61f8d9fe92b2d396000955207":[[2,"광양","95449470014f-0"]],"1b679d68c749a30f81befa0a5f0f605e0c29961bdc8bad23b581bfaa2e2bee18":[[3,"진주","1b679d68c749-0"]],"045a25901dc1086687bf3e82b95bcd0508127f3a03c04010ffa1016580327e58":[[2,"진주","045a25901dc1-0"]],"bbc400d5d50687ca7d305956469fd9c01d0bd7ab282ffe688f6ae7cf40a4ba25":[[3,"여수","bbc400d5d506-0"]],"693ae590c1857a99f383ceeaa3540d5e3b51f353891a80c7254d968a229adea3":[[2,"세종","693ae590c185-0"]],"8f11fd18d512ddf89f907d2e167ad61a9816887e52979d3c62c0776c6de0bfae":[[3,"창원","8f11fd18d512-0"]],"ba561a1599f6f2cbc6839c2fed3a9235076df3f7761d05f895903d0c14da735b":[[3,"진주","ba561a1599f6-0"]],"b8a6a1a3c05f2394abf96d90c8acf49fcb2eb2926d914aa869fc05cad2878736":[[2,"여수","b8a6a1a3c05f-0"]],"ed9f05c782353625f18b84adc23fd6a9f2c416ef7d540c8875a9282a870647e1":[[2,"순천","ed9f05c78235-0"]],"83ba0ba68b766e0a1f0cbd3e5534e557672e2704739e9de9bf12bf3a89fae85a":[[3,"순천","83ba0ba68b76-0"]],"f5b44bea00a6de379c8246413d54e7f8357ed8a76de1bd62b4825a88f113611d":[[4,"진주","f5b44bea00a6-0"]],"89231655647d98c08c97e171e3b9ff833ebda9035bda410262c0c5827a0baea8":[[2,"여수","89231655647d-0","여수문수중학교"],[2,"창원","89231655647d-1","웅남중학교"]],"39d285af4f08b896544a11d22a0319b81e78d039e8e3a4d6a37adf0edc16479d":[[2,"광양","39d285af4f08-0"]],"d44d90ed667c6976631dde49429dc646d13c78fdecfa4afcacc408eb792cd8cc":[[2,"광양","d44d90ed667c-0"]],"aae81d14edc5a5e287d0a2defeb9ab14e90fccaa6cbc0a7d5eccd1c1a15eef87":[[2,"순천","aae81d14edc5-0"]],"6452a71d173de13019ac79ac52358256e1fc42a425a1dcb6bf74ca9fbf75f7f2":[[3,"광양","6452a71d173d-0"]],"357c32ff571f8c38c4f8f730ef3e350cfa7ad284fd591e023dbee801888e1fd3":[[3,"순천","357c32ff571f-0"]],"3e5b91f5072fa38cc0068bd58c154a2ffecafd799e28db73a82d53ac425c39b2":[[3,"창원","3e5b91f5072f-0"]],"ab3026a7d2bddcd1ed2f86fc7cfebe9846a997aa4d20162dd8fcf139184205e6":[[3,"순천","ab3026a7d2bd-0"]],"99bbc57c8c75ddabf4919d9dbb94fdb79d8b496114c1e6fb2fe2a40f29ee4d4d":[[2,"여수","99bbc57c8c75-0"]],"4f1d804e1b704aece9258dce30ee39cbb7a89d0ed08506ff2faf90f7b12d0238":[[2,"순천","4f1d804e1b70-0"]],"f539f99dc5f9727009fef00bc69cdcd63edd4973c618f77b398e34e798885928":[[3,"순천","f539f99dc5f9-0"]],"8b588ddfdc31ed22b4469343b039694ee438b509efaacc06c1ffc5dd70b076d8":[[2,"남원","8b588ddfdc31-0"]],"dbb95de755c2c4d846f9eb058bc9746bb22ae650bd230dafef526cb75fd43215":[[3,"여수","dbb95de755c2-0"]],"34ec2117b4ecd798c4c9b8c70844fe9e7f99367fda3a3a238d10234c82324f0f":[[3,"광양","34ec2117b4ec-0"]],"fde6fe2e180d8ed0d92199f2b318517e331b83416f6b376fb6ef8c070b707908":[[3,"광주","fde6fe2e180d-0"]],"94b380c3526b8b7af13b0c489250826261bb5609166855613f06e91d6858b9f2":[[2,"광양","94b380c3526b-0"]],"de1dd3095f8f853dddd27be1bcc1bffce82b3790f0ba998a1f7975bfe0e52b2a":[[4,"순천","de1dd3095f8f-0"]],"2f09d57b24b8a48c9a9900e344dd091ef8187daef403a4b6922b22086f137b2c":[[2,"창원","2f09d57b24b8-0"]],"92ad5038b5af63e0066bda50d61230630167985dc29a22f5e6c6ab38a31fe7e2":[[3,"서울","92ad5038b5af-0"]],"873ad965aebff4b4356fa96be0b673d7e0ce33e7bdb2d18bf1134c05eee821cf":[[3,"여수","873ad965aebf-0"]],"bf5fe3e1b104edf1d97c104833bc97ea3cdbc9a42c99bfd931dcc53b26caeda1":[[2,"여수","bf5fe3e1b104-0"]],"71fa7434ac8248eac163f046979ae3e5c2650941ff58980d0b36dfa56e10d525":[[2,"광양","71fa7434ac82-0"]],"e2a3a7c2b35c53cbff13b1bf4ca7d42802a7d6a7f9da69d17b9551f8782ebcf4":[[1,"순천","e2a3a7c2b35c-0"]],"62d107041b82f1ede8b3484eac6a62732e8385951cee868b2f603f3dcabc42d3":[[3,"부산","62d107041b82-0"]],"279f9eb535f57b167d9b69357b93226085c65785af2ba4376252849e9c70254d":[[3,"여수","279f9eb535f5-0"]],"ba1b9d30964f993e1b36b040157659ff6040eb10abb833aed51f78f77b289bda":[[3,"순천","ba1b9d30964f-0"]],"cc51feb4d5962cfd93173ffad698e201ec5a9a672853875dddb1a87dd217438b":[[3,"진주","cc51feb4d596-0"]],"e3a2d898503f9ef6a182112980c0f9b4f67a3cbd9ad695e55a306760f946685c":[[2,"광양","e3a2d898503f-0"]],"cdde85d0a90cdaebc938f01e1e607915ed9a1b540016f99c3310b29db5611f83":[[2,"광양","cdde85d0a90c-0"]],"da5756084f19cbe2eead75d6e8bbe535eb070bcb737b532904bda95a4c6ba016":[[3,"경기","da5756084f19-0"]],"e1c1fd78b3037fc292d0be8c902664c3d0415d2ecb2dd7102b373ae95166bf8c":[[2,"광주","e1c1fd78b303-0"]],"56ebd51f41fac837882f40aa954c24b8b7f0f525dda76d22f165411db858eab6":[[3,"광주","56ebd51f41fa-0"]],"fe551d19f7b6d23513922ddab0299efe9d7b9848a472174572c8af99fa9edc65":[[3,"순천","fe551d19f7b6-0"]],"e7794d854303e959a5769c6d4f6e51fc7020415a4b65823d1912f5f4e16a8f52":[[2,"진주","e7794d854303-0"]],"116684cd63e08bc93e0114542124d1790bf710cc5f4c25c92a9ac8a5d9edb0b6":[[3,"여수","116684cd63e0-0"]],"168920cdd43aa557270db638a917e15d1a3c5ae83f692e882d5c6174929a15c0":[[2,"창원","168920cdd43a-0"]],"edf5c82368a0163f7537f6716ab65dbe4c574e8f024abbdf00a1f2d7c5bb1c9e":[[2,"광양","edf5c82368a0-0"]],"9dcc9efc4f2e9c0591fa2ee3640c56aac1b0ac88a06d129aed41a756e0dbeb49":[[1,"광양","9dcc9efc4f2e-0"]],"c68391212e95997786225d8f34d82a156d69f93ffcef9691694b3c8227f51758":[[3,"광주","c68391212e95-0"]],"e61f9aa358eae2641e8d03730484859f9b948b60bd412dd53116e7f9cf8117a8":[[4,"창원","e61f9aa358ea-0"]],"745d37ddaf27cfa7fd437325e68f2fda3de6e1f3939f6932d2624190ee6c435e":[[1,"광주","745d37ddaf27-0"]],"73d49b253c3289d02327f7eea5318b917553b2757f03ced23a2d85a7d96211f6":[[1,"광양","73d49b253c32-0"]],"e9572a988eb235fcd1eba9586d2cbd27e75d49700142a6e38be326ef5a00a7d6":[[3,"진주","e9572a988eb2-0"]],"cf4fa816af25474871d4a0ef86e9b5af95461969e08333a27a9170eee710c143":[[3,"창원","cf4fa816af25-0"]],"277b9db8aa195d9c7465452760e071ad91d0c1a1d58aa62b64b34599f6db4ca1":[[4,"순천","277b9db8aa19-0"]],"4d1337bcce02507fa28bfe15cda43497e49cd1e5295c7190a6fc53723c079b27":[[4,"순천","4d1337bcce02-0"]],"c76d38b55d28e117ac0a3aee0ba7206a832e5c9785b6b2943681332891f84530":[[2,"광양","c76d38b55d28-0"]],"4eecc851e92ed8186cdf48a290a8c8b353b41242f8ec69e872d85bd79b488f0a":[[2,"광양","4eecc851e92e-0"]],"a840ffc995cb0c103c824cb6b0ae98c1fd1afc2a2e5e4dcaa6fe47b758b8255f":[[3,"창원","a840ffc995cb-0"]],"8a628dcbb9347e7c17a3a60b45b74bf6ea461459536463a8833b5e528e592363":[[2,"광양","8a628dcbb934-0"]],"d87534aac5b885cd78ec1d299629e4735ec21395574942541d478bc88821c279":[[1,"서울","d87534aac5b8-0"]],"d23976c4526274bbccdc9edbac7487e7d2064b7b98a0a4d16da669767872ac3d":[[2,"서울","d23976c45262-0"]],"e62cce18c10ad9ce623bafe4c613e78665db20ebb60c7d8195d6bb3efdc3b2d8":[[3,"여수","e62cce18c10a-0"]],"4f2627c1762badc82f0869c63040b841f788bc558171a695c33b27686653e6a4":[[3,"순천","4f2627c1762b-0"]],"3eeb1469f56d3ec9f5aab4286f0b9a63cded28143561e67e0c3717f47a821d2b":[[2,"여수","3eeb1469f56d-0"]],"541db3f1ea8bdf52d5100e0bfd5ea77b53d87c80857e6b7b7f6ba5748075f946":[[2,"창원","541db3f1ea8b-0"]],"83222ddd40a9b977e02aea3dd9a3ea0d298b8c0c50ca04fb5a17effed04b1a0d":[[3,"창원","83222ddd40a9-0"]],"625d63b7f386797475badf5b314c104092df118028614e3d0c2aafe87ce2ac34":[[4,"광주","625d63b7f386-0"]],"3a6c194b32f50bb38f8ab465caa96144c96494fdbdf462039c41a89e20669c68":[[3,"순천","3a6c194b32f5-0"]],"d76d1e5d0c94258b06510fdf69c08ab5a588e33e656b87807570d13ab0801b2d":[[1,"진주","d76d1e5d0c94-0"]],"1eba4b0bbd540ae35fc56d02f2fd3d4ed861e66777cc05702224b0ffb291f5d3":[[2,"광주","1eba4b0bbd54-0"]],"afca0c321ec32b1683e974dbaf948b76df51bb6d8496a119d08f9c7d28d0de99":[[3,"광양","afca0c321ec3-0"]],"294a4c0e4702e957f01ecffd5ff7a9cc9b85fc9e5d66379e779a92cc19af5884":[[1,"광양","294a4c0e4702-0"]],"e4f8292d8b63b3e2593ad2c84ee055a2a2370e25ba29426051f337b18cecc79c":[[2,"서울","e4f8292d8b63-0","가원중학교"],[3,"광주","e4f8292d8b63-1","광주동성여자중학교"]],"f6bbd97c487fea15725765a47af34e583c3e970b3bd3e582b4bcb2ba37e48e87":[[4,"순천","f6bbd97c487f-0"]],"4dc1d39960934699fd3b9de8992596abc8f81e0a7ff8325289a5d284cf99e8c7":[[4,"부산","4dc1d3996093-0"]],"f3068af97625cad1ef5def6683d80b6feaf3429b0249c1f109e113946fec9871":[[2,"순천","f3068af97625-0"]],"5b05c609d740485518bd42fa13e1bd870afc564555f2fdd1a76a5e2da3e2fb2c":[[2,"광양","5b05c609d740-0"]],"9de7e0a7e4ee391d959ed1af84daa3482413488c5c4e2d317a0302e2ad1bd17c":[[4,"거제","9de7e0a7e4ee-0"]],"d842018907e0104678df58b1b34150a4741d8b3ec26e8fa63f6e360653866344":[[3,"경기","d842018907e0-0"]],"809d1050637be177ecf252b8c87cbfab5dc124753a2436697e0cfaa58fa7b5c2":[[3,"창원","809d1050637b-0"]],"b9874a8ebf5bbdd383627900791f1144d554bce8768627ed65d8db5455b95bf0":[[2,"여수","b9874a8ebf5b-0"]],"b4805284f8695755eb176728d5d1732481e898944b522c43c4741a0cb1d01fa0":[[1,"광주","b4805284f869-0"]],"4774e7dca10b62f1533ade8ba71679a070d5bfe8deab2ed7d3ffc06e1278bc83":[[2,"진주","4774e7dca10b-0"]],"f82940277ad05e8a765916984c49a5e5e59f9dcbaf6cdfaf7732ca34d1163975":[[2,"무안","f82940277ad0-0"]],"dbd2b33cd7481fa2232ceaa676de9b0553e6aa08cfc33795bbc369e7b5eb1276":[[2,"광주","dbd2b33cd748-0"]],"e14c9fd084e0de631d938169675153ae84b24544330381c045908ad5083ce500":[[3,"여수","e14c9fd084e0-0"]],"665099bcf4f30b340ce83584886e704d990abedd76dbdf873b6a91f29f8628db":[[3,"여수","665099bcf4f3-0"]],"6889e12cee8aa05f78d9e7a3fbd82881f22908624423ddbba18130f165601c13":[[1,"광양","6889e12cee8a-0"]],"368c73b2d5d296b9b21ce48e9651c77f7ba4db6e48c5111676904ab579465f47":[[2,"여수","368c73b2d5d2-0"]],"0c147379feda870bdeb202887a3b4199d932d89356089d0b045437909326b3f7":[[3,"광양","0c147379feda-0"]],"14237a99935b3961b60bf1aa7b1f28f752689f3bd8807c567dabed2d6a73aa2d":[[4,"여수","14237a99935b-0"]],"5b11806ddeade04000338b76dcbce22a61d3b35aba324e819646d0d3feebc933":[[2,"거제","5b11806ddead-0"]],"451140243aa6d2ab2c4e3acc04f20e9a1dd34e7227fae2348a6b88d63ae151cc":[[3,"거제","451140243aa6-0"]],"e83c464dafd4a324517899de8233c9a87a7d46a7f5ff59b229f7ffaaec7a9d78":[[3,"광주","e83c464dafd4-0"]],"bcfc307eb63dc42bcbacce7b5da36c3248be10ad2b0d2e0c2b5920c829b93cfa":[[4,"서울","bcfc307eb63d-0"]],"10616444c83b217a308f930e95eaa7d86dde251657ee60c2c935ac2d5434add1":[[1,"광양","10616444c83b-0"]],"fca06015332df2b89cfeb2bd31cf13e9047194f774effb8b559a395334e25062":[[1,"광주","fca06015332d-0"]],"a83e24ffa6ce68d0d45d4258cb6c40fa3f83d144a1bdaa95c4e9000d8f84dcbf":[[2,"광양","a83e24ffa6ce-0"]],"e3225e0d716d24b3b7cf65ffda489c6c194a41be624e382d345d3ed50179d584":[[4,"창원","e3225e0d716d-0"]],"a83ac857d16de641994a860a23bb173ab3c5a7218b7e71685a8890a2635ce2f2":[[2,"순천","a83ac857d16d-0"]],"7b7b7ac8847ebc5a6ade79eef63341f26c391f05c22681e1157f0752641bc085":[[4,"창원","7b7b7ac8847e-0"]],"f812ecd6cd7e20e77eabdd798fbef80be758a2011fac3a68cd6f8f5361dc7773":[[2,"광주","f812ecd6cd7e-0"]],"aab695f01150d859118b565070e8455ee4f124ac76a28db58282d151802d61d9":[[2,"광주","aab695f01150-0"]],"6d7b0dc15301d56f3189e5ca9af930b7a97d89313515d9a346ba7ac3a8494a97":[[2,"진주","6d7b0dc15301-0"]],"a783ceed63595e237f9768c3152d1db92aedff2faaecfd7e444c2c549828743d":[[2,"여수","a783ceed6359-0"]],"00ecb2cefd568c3b4d730723390d5c0e6420e4a1cd2c91819d60f3f5d892451c":[[4,"여수","00ecb2cefd56-0"]],"b6d8467094bfa43f85be65b8562e1acbeb92a06e3d121082f02274ab054d2bf6":[[3,"진주","b6d8467094bf-0"]],"607c6567ce8c24b4ad8ada5b48ed15b80392f5ba5bba4fff10d2743dfcd37d5c":[[2,"순천","607c6567ce8c-0"]],"e8243b85d38df74686239c56bea4878c943b7622f85dcbd459c1532dadd0ffdf":[[4,"순천","e8243b85d38d-0"]],"5d1f6b4f0a6b023a2c1b582080fc35a91ea1b84fc94192413b84d0b4e726ff53":[[1,"연습","5d1f6b4f0a6b-0"]]};   /* 해시 -> [[신청인원, 지역, 기록ID, (동명이인만) 중학교], ...] (이름은 들어 있지 않음) */
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var f=$('f'), nm=$('nm'), out=$('out'), timer=null, cur=null, name='', n=1;
+  var panes=[f,$('s-pick'),$('s-cnt'),out];
+  function show(el){panes.forEach(function(p){p.hidden=(p!==el)}); window.scrollTo(0,0)}
+  function norm(s){return (s||'').normalize('NFC').replace(/\s+/g,'')}
+  async function hash(s){
+    var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(SALT+s));
+    return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');
+  }
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+  function reset(){clearInterval(timer);nm.value='';show(f);nm.focus()}
+  document.querySelectorAll('[data-back]').forEach(function(b){b.onclick=reset});
+  function setN(v){n=Math.max(1,Math.min(10,v));$('cv').textContent=n}
+  $('dn').onclick=function(){setN(n-1)}; $('up').onclick=function(){setN(n+1)};
+
+  function ask(entry){
+    cur=entry; $('c-who').textContent=name+' 학생';
+    $('c-reg').textContent='신청 인원 '+entry[0]+'명'; setN(entry[0]); show($('s-cnt'));
+  }
+  f.addEventListener('submit', async function(e){
+    e.preventDefault(); name=norm(nm.value); if(!name) return;
+    var hit=D[await hash(name)];
+    if(!hit){
+      out.innerHTML='<div class="res no"><div class="badge">명단에 없습니다</div><div class="who">'+esc(name)+'</div>'+
+        '<p class="msg">이름을 다시 확인해 입력해 주세요. 그래도 안 되면 입구 선생님께 말씀해 주세요.</p>'+
+        '<button type="button" class="ghost" id="ag">다시 입력</button></div>';
+      show(out); $('ag').onclick=reset; return;
+    }
+    if(hit.length===1) return ask(hit[0]);
+    $('pk-who').textContent=name+' 학생'; var pk=$('pk'); pk.innerHTML='';
+    hit.forEach(function(h){var b=document.createElement('button');b.type='button';
+      b.innerHTML='<span>'+esc(h[1]+(h[3]?' · '+h[3]:''))+'</span><span>신청 '+h[0]+'명</span>';b.onclick=function(){ask(h)};pk.appendChild(b)});
+    show($('s-pick'));
+  });
+  function tick(){var c=$('clk'); if(c) c.textContent='확인 시각 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+  $('go').onclick=function(){
+    out.innerHTML='<div class="res ok"><div class="badge">✓ 신청자 확인</div><div class="who">'+esc(name)+' 학생</div>'+
+      '<div class="cnt">'+n+'<small> 명 입장</small></div><div class="msg">신청 '+cur[0]+'명</div>'+
+      '<div class="clock" id="clk"></div><div class="rec" id="rec">입장 기록 중…</div>'+
+      '<button type="button" class="ghost" id="ag">다른 이름 확인</button></div>';
+    show(out); $('ag').onclick=reset; clearInterval(timer); tick(); timer=setInterval(tick,1000);
+    var u=API+'?a=in&id='+encodeURIComponent(cur[2])+'&n='+n+'&r='+encodeURIComponent(cur[1])+'&p='+cur[0];
+    fetch(u).then(function(r){return r.json()}).then(function(j){
+      $('rec').textContent = j.ok ? (j.dup?'이미 입장 기록이 있어 인원만 고쳤습니다':'입장 기록 완료') : '기록 실패 (입장은 가능합니다)';
+    }).catch(function(){var r=$('rec'); if(r) r.textContent='기록 실패 (입장은 가능합니다)'});
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>5차 입학설명회 참석 현황</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --bg:#f2f4f8; --card:#ffffff; --fg:#17202c; --muted:#5b6778; --line:#dfe4ec; --grid:#e8ecf2;
+  --bar:#2f5a8f; --track:#e3e9f2;
+  --body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#10151c; --card:#19212b; --fg:#e7ebf1; --muted:#9ba7b7; --line:#2d3743; --grid:#252e39;
+  --bar:#7fa6d6; --track:#25303d; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;word-break:keep-all;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{font-size:22px;font-weight:900;margin:0}
+.upd{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.tiles{grid-template-columns:1fr}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:13px;color:var(--muted);font-weight:500}
+.tile .v{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile .v small{font-size:16px;font-weight:700;color:var(--muted)}
+.tile .s{font-size:13px;color:var(--muted)}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+h2{font-size:16px;margin:0 0 12px}
+.rg{display:grid;grid-template-columns:4.5em minmax(0,1fr) auto;gap:6px 10px;align-items:center;font-variant-numeric:tabular-nums}
+.rg .nm{font-weight:700}
+.trk{height:14px;background:var(--track);border-radius:4px;overflow:hidden}
+.trk i{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0}
+.rg .num{font-size:13px;color:var(--muted);text-align:right;white-space:nowrap}
+.rg .num b{color:var(--fg)}
+.chart{overflow-x:auto}
+svg text{fill:var(--muted);font:12px var(--body)}
+svg .gl{stroke:var(--grid)}
+svg rect.b{fill:var(--bar)}
+svg rect.hit{fill:transparent}
+.tip{position:fixed;pointer-events:none;background:var(--fg);color:var(--card);font-size:13px;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.empty{color:var(--muted);font-size:14px}
+.err{color:#b4501c}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>2027학년도 5차 입학설명회 참석 현황</h1><span class="upd" id="upd">불러오는 중…</span></div>
+  <div class="tiles">
+    <div class="tile"><div class="k">도착 가족</div><div class="v" id="t1">–</div><div class="s" id="t1s"></div></div>
+    <div class="tile"><div class="k">참석 인원</div><div class="v" id="t2">–</div><div class="s" id="t2s"></div></div>
+    <div class="tile"><div class="k">신청 대비 인원 차이</div><div class="v" id="t3">–</div><div class="s">도착 가족의 신청 인원과 실제 참석 인원 비교</div></div>
+  </div>
+  <section><h2>지역별 도착 (가족 수)</h2><div class="rg" id="rg"></div></section>
+  <section><h2>시간대별 도착 (10분 단위, 참석 인원)</h2><div class="chart" id="ch"><p class="empty">아직 도착 기록이 없습니다.</p></div></section>
+</div>
+<div class="tip" id="tip" hidden></div>
+<script>
+var API="https://script.google.com/macros/s/AKfycbwd-bAc54yTfO9f4ndDZk2a8wcf5TaCkw2brf3_dK-e3RuRIbtynAFM_MV_1ZIQALs8/exec";
+var REG={"진주":[14,35],"부산":[5,16],"여수":[24,66],"순천":[22,62],"창원":[18,54],"울산":[1,3],"광주":[17,39],"사천":[1,2],"광양":[24,46],"서울":[6,16],"대전":[1,3],"세종":[1,2],"남원":[1,2],"경기":[2,6],"거제":[3,9],"무안":[1,2],"연습":[1,1]};  /* 지역 -> [신청 가족, 신청 인원] */
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var totF=0,totP=0; Object.keys(REG).forEach(function(k){totF+=REG[k][0];totP+=REG[k][1]});
+  var tip=$('tip');
+  function render(rows){
+    var f=rows.length, p=0, pr=0, by={};
+    rows.forEach(function(r){p+=+r[3]||0; pr+=+r[2]||0; by[r[1]]=(by[r[1]]||0)+1});
+    $('t1').innerHTML=f+'<small> / '+totF+'</small>'; $('t1s').textContent='신청 가족의 '+(totF?Math.round(f/totF*100):0)+'%';
+    $('t2').innerHTML=p+'<small> 명</small>'; $('t2s').textContent='전체 신청 '+totP+'명';
+    var d=p-pr; $('t3').innerHTML=(d>0?'+':'')+d+'<small> 명</small>';
+    var ks=Object.keys(REG).sort(function(a,b){return REG[b][0]-REG[a][0]});
+    $('rg').innerHTML=ks.map(function(k){var a=by[k]||0,t=REG[k][0];
+      return '<span class="nm">'+k+'</span><div class="trk" title="'+k+' '+a+'/'+t+'가족"><i style="width:'+(a/t*100)+'%"></i></div><span class="num"><b>'+a+'</b> / '+t+'</span>'}).join('');
+    // 시간대별
+    if(!rows.length){$('ch').innerHTML='<p class="empty">아직 도착 기록이 없습니다.</p>';return}
+    var bin=600000, ts=rows.map(function(r){return r[0]}), lo=Math.floor(Math.min.apply(0,ts)/bin)*bin, hi=Math.floor(Math.max.apply(0,ts)/bin)*bin;
+    var bins=[]; for(var t=lo;t<=hi;t+=bin) bins.push({t:t,v:0,f:0});
+    rows.forEach(function(r){var b=bins[Math.floor((r[0]-lo)/bin)]; b.v+=+r[3]||0; b.f++});
+    var mx=Math.max.apply(0,bins.map(function(b){return b.v})), step=mx<=10?2:mx<=40?10:20, top=Math.ceil(mx/step)*step||step;
+    var bw=36, gap=8, L=36, B=28, T=10, H=200, W=L+bins.length*(bw+gap)+gap;
+    var y=function(v){return T+(H-T-B)*(1-v/top)};
+    var s='<svg width="'+Math.max(W,300)+'" height="'+H+'" role="img" aria-label="시간대별 도착 인원">';
+    for(var g=0;g<=top;g+=step) s+='<line class="gl" x1="'+L+'" x2="'+W+'" y1="'+y(g)+'" y2="'+y(g)+'"/><text x="'+(L-6)+'" y="'+(y(g)+4)+'" text-anchor="end">'+g+'</text>';
+    bins.forEach(function(b,i){var x=L+gap+i*(bw+gap), hh=y(0)-y(b.v), lab=new Date(b.t).toTimeString().slice(0,5);
+      if(b.v) s+='<path d="M'+x+','+y(0)+'V'+(y(b.v)+4)+'q0,-4 4,-4h'+(bw-8)+'q4,0 4,4V'+y(0)+'Z" class="bp" fill="var(--bar)"/>';
+      if(bins.length<=12||i%2===0) s+='<text x="'+(x+bw/2)+'" y="'+(H-8)+'" text-anchor="middle">'+lab+'</text>';
+      s+='<rect class="hit" x="'+(x-gap/2)+'" y="'+T+'" width="'+(bw+gap)+'" height="'+(H-T-B)+'" data-t="'+lab+' – '+b.f+'가족 · '+b.v+'명"/>';
+    });
+    $('ch').innerHTML=s+'</svg>';
+    $('ch').querySelectorAll('.hit').forEach(function(r){
+      r.addEventListener('pointermove',function(e){tip.textContent=r.dataset.t;tip.hidden=false;tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-36)+'px'});
+      r.addEventListener('pointerleave',function(){tip.hidden=true});
+    });
+  }
+  function load(){
+    fetch(API+'?t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+      render(j.rows||[]); $('upd').textContent='마지막 갱신 '+new Date().toLocaleTimeString('ko-KR')+' · 30초마다 자동 갱신';
+    }).catch(function(){$('upd').innerHTML='<span class="err">불러오기 실패 – 잠시 후 다시 시도합니다</span>'});
+  }
+  render([]); load(); setInterval(load,30000);
+})();
+</script>
+</body>
+</html>
