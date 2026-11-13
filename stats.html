@@ -23,7 +23,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 h1{font-size:22px;font-weight:900;margin:0}
 .upd{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.tiles{grid-template-columns:1fr}}
 .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .tile .k{font-size:13px;color:var(--muted);font-weight:500}
@@ -54,9 +55,10 @@ svg rect.hit{fill:transparent}
   <div class="tiles">
     <div class="tile"><div class="k">도착 가족</div><div class="v" id="t1">–</div><div class="s" id="t1s"></div></div>
     <div class="tile"><div class="k">참석 인원</div><div class="v" id="t2">–</div><div class="s" id="t2s"></div></div>
+    <div class="tile"><div class="k">현장 등록 (미신청)</div><div class="v" id="t4">–</div><div class="s" id="t4s"></div></div>
     <div class="tile"><div class="k">신청 대비 인원 차이</div><div class="v" id="t3">–</div><div class="s">도착 가족의 신청 인원과 실제 참석 인원 비교</div></div>
   </div>
-  <section><h2>지역별 도착 (가족 수)</h2><div class="rg" id="rg"></div></section>
+  <section><h2>지역별 도착 (신청 가족 기준, 현장 등록은 따로 표시)</h2><div class="rg" id="rg"></div></section>
   <section><h2>시간대별 도착 (10분 단위, 참석 인원)</h2><div class="chart" id="ch"><p class="empty">아직 도착 기록이 없습니다.</p></div></section>
 </div>
 <div class="tip" id="tip" hidden></div>
@@ -67,15 +69,22 @@ var REG={"진주":[14,35],"부산":[5,16],"여수":[24,66],"순천":[22,62],"창
   var $=function(i){return document.getElementById(i)};
   var totF=0,totP=0; Object.keys(REG).forEach(function(k){totF+=REG[k][0];totP+=REG[k][1]});
   var tip=$('tip');
+  function esc(x){var d=document.createElement('div');d.textContent=x;return d.innerHTML}
   function render(rows){
-    var f=rows.length, p=0, pr=0, by={};
-    rows.forEach(function(r){p+=+r[3]||0; pr+=+r[2]||0; by[r[1]]=(by[r[1]]||0)+1});
+    var reg=rows.filter(function(r){return !r[4]}), wk=rows.filter(function(r){return r[4]});
+    var f=reg.length, p=0, pr=0, pReg=0, wp=0, by={}, wby={};
+    rows.forEach(function(r){p+=+r[3]||0});
+    reg.forEach(function(r){pReg+=+r[3]||0; pr+=+r[2]||0; by[r[1]]=(by[r[1]]||0)+1});
+    wk.forEach(function(r){wp+=+r[3]||0; wby[r[1]]=(wby[r[1]]||0)+1});
+    $('t4').innerHTML=wk.length+'<small> 가족</small>'; $('t4s').textContent=wp+'명 참석';
     $('t1').innerHTML=f+'<small> / '+totF+'</small>'; $('t1s').textContent='신청 가족의 '+(totF?Math.round(f/totF*100):0)+'%';
-    $('t2').innerHTML=p+'<small> 명</small>'; $('t2s').textContent='전체 신청 '+totP+'명';
-    var d=p-pr; $('t3').innerHTML=(d>0?'+':'')+d+'<small> 명</small>';
+    $('t2').innerHTML=p+'<small> 명</small>'; $('t2s').textContent='신청자 '+pReg+'명 + 현장 '+wp+'명 (전체 신청 '+totP+'명)';
+    var d=pReg-pr; $('t3').innerHTML=(d>0?'+':'')+d+'<small> 명</small>';
     var ks=Object.keys(REG).sort(function(a,b){return REG[b][0]-REG[a][0]});
     $('rg').innerHTML=ks.map(function(k){var a=by[k]||0,t=REG[k][0];
-      return '<span class="nm">'+k+'</span><div class="trk" title="'+k+' '+a+'/'+t+'가족"><i style="width:'+(a/t*100)+'%"></i></div><span class="num"><b>'+a+'</b> / '+t+'</span>'}).join('');
+      return '<span class="nm">'+k+'</span><div class="trk" title="'+k+' '+a+'/'+t+'가족"><i style="width:'+(a/t*100)+'%"></i></div><span class="num"><b>'+a+'</b> / '+t+(wby[k]?' · 현장 +'+wby[k]:'')+'</span>'}).join('')+
+      Object.keys(wby).filter(function(k){return !REG[k]}).map(function(k){
+        return '<span class="nm">'+esc(k)+'</span><div class="trk"></div><span class="num">현장 +'+wby[k]+'</span>'}).join('');
     // 시간대별
     if(!rows.length){$('ch').innerHTML='<p class="empty">아직 도착 기록이 없습니다.</p>';return}
     var bin=600000, ts=rows.map(function(r){return r[0]}), lo=Math.floor(Math.min.apply(0,ts)/bin)*bin, hi=Math.floor(Math.max.apply(0,ts)/bin)*bin;
